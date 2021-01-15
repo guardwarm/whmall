@@ -12,6 +12,7 @@
       <arg column="update_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
     </constructor>
   </resultMap>
+  <!--只查找需要的而不是select *，这样在后续表结构调整后仍可正常使用-->
   <sql id="Base_Column_List" >
     id, user_id, product_id, quantity, checked, create_time, update_time
   </sql>
