@@ -16,7 +16,7 @@
     id, parent_id, name, status, sort_order, create_time, update_time
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
-    select 
+    select
     <include refid="Base_Column_List" />
     from mmall_category
     where id = #{id,jdbcType=INTEGER}
@@ -26,12 +26,12 @@
     where id = #{id,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.mmall.pojo.Category" >
-    insert into mmall_category (id, parent_id, name, 
-      status, sort_order, create_time, 
-      update_time)
-    values (#{id,jdbcType=INTEGER}, #{parentId,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, 
-      #{status,jdbcType=BIT}, #{sortOrder,jdbcType=INTEGER}, now(), 
-      now())
+    insert into mmall_category (id, parent_id, name,
+                                status, sort_order, create_time,
+                                update_time)
+    values (#{id,jdbcType=INTEGER}, #{parentId,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR},
+            #{status,jdbcType=BIT}, #{sortOrder,jdbcType=INTEGER}, now(),
+            now())
   </insert>
   <insert id="insertSelective" parameterType="com.mmall.pojo.Category" >
     insert into mmall_category
@@ -98,7 +98,7 @@
         sort_order = #{sortOrder,jdbcType=INTEGER},
       </if>
       <if test="createTime != null" >
-        create_time = now(),
+        create_time = #{createTime,jdbcType=TIMESTAMP},
       </if>
       <if test="updateTime != null" >
         update_time = now(),
@@ -109,11 +109,18 @@
   <update id="updateByPrimaryKey" parameterType="com.mmall.pojo.Category" >
     update mmall_category
     set parent_id = #{parentId,jdbcType=INTEGER},
-      name = #{name,jdbcType=VARCHAR},
-      status = #{status,jdbcType=BIT},
-      sort_order = #{sortOrder,jdbcType=INTEGER},
-      create_time = now(),
-      update_time = now()
+        name = #{name,jdbcType=VARCHAR},
+        status = #{status,jdbcType=BIT},
+        sort_order = #{sortOrder,jdbcType=INTEGER},
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+        update_time = now()
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <select id="selectCategoryChildrenByParentId" resultMap="BaseResultMap" parameterType="int">
+    select
+    <include refid="Base_Column_List"/>
+    from mmall_category
+    where parent_id = #{parentId}
+  </select>
 </mapper>
