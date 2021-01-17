@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 /**
  * @author guardWarm
  * @date 2021-01-16 13:10
+ * 用于封装商品分页展示时的一个条目
  */
 public class ProductListVo {
 
