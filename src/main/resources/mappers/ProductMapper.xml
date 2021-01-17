@@ -22,7 +22,7 @@
     create_time, update_time
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
-    select 
+    select
     <include refid="Base_Column_List" />
     from mmall_product
     where id = #{id,jdbcType=INTEGER}
@@ -153,7 +153,7 @@
         status = #{status,jdbcType=INTEGER},
       </if>
       <if test="createTime != null" >
-        create_time = now(),
+        create_time = #{createTime,jdbcType=TIMESTAMP},
       </if>
       <if test="updateTime != null" >
         update_time = now(),
@@ -172,8 +172,48 @@
       price = #{price,jdbcType=DECIMAL},
       stock = #{stock,jdbcType=INTEGER},
       status = #{status,jdbcType=INTEGER},
-      create_time = now(),
+      create_time = #{createTime,jdbcType=TIMESTAMP},
       update_time = now()
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+
+  <select id="selectList" resultMap="BaseResultMap" >
+    SELECT
+    <include refid="Base_Column_List"/>
+    from mmall_product
+    ORDER BY id asc
+  </select>
+
+
+  <select id="selectByNameAndProductId" resultMap="BaseResultMap" parameterType="map">
+    SELECT
+    <include refid="Base_Column_List"/>
+    from mmall_product
+    <where>
+      <if test="productName != null">
+        and name like #{productName}
+      </if>
+      <if test="productId != null">
+        and id = #{productId}
+      </if>
+    </where>
+  </select>
+
+  <select id="selectByNameAndCategoryIds" resultMap="BaseResultMap" parameterType="map">
+    SELECT
+    <include refid="Base_Column_List"></include>
+    from mmall_product
+    where status = 1
+    <if test="productName != null">
+      and name like #{productName}
+    </if>
+    <if test="categoryIdList != null" >
+      and category_id in
+      <foreach item="item" index="index" open="(" separator="," close=")" collection="categoryIdList">
+        #{item}
+      </foreach>
+    </if>
+  </select>
+
 </mapper>
