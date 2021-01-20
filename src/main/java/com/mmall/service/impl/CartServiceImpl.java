@@ -132,7 +132,7 @@ public class CartServiceImpl implements ICartService {
 	}
 
 	/**
-	 * 获取当前用户购物车中商品个数
+	 * 获取当前用户购物车中商品个数(包括未选中的商品)
 	 * @param userId 用户ID
 	 * @return 商品总数
 	 */
