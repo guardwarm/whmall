@@ -4,7 +4,6 @@ import com.github.pagehelper.PageInfo;
 import com.mmall.common.ServerResponse;
 import com.mmall.pojo.Product;
 import com.mmall.vo.ProductDetailVo;
-import com.mmall.vo.ProductListVo;
 
 /**
  * @author guardWarm
@@ -41,10 +40,19 @@ public interface IProductService {
 	 * @param pageSize 每页个数
 	 * @return 封装好的对应页信息（pageInfo）
 	 */
-	ServerResponse<PageInfo<ProductListVo>> getProductList(int pageNum, int pageSize);
+	ServerResponse getProductList(int pageNum, int pageSize);
 
 
-	ServerResponse<PageInfo<ProductListVo>> searchProduct(String productName,Integer productId,int pageNum,int pageSize);
+	/**
+	 * 依据产品名称（productName）或产品ID（productId）来对产品分页
+	 * 	 * 二者只可选其一，都传入category优先
+	 * @param productName 产品名称 模糊查询
+	 * @param productId 产品ID
+	 * @param pageNum 页号
+	 * @param pageSize 页面大小
+	 * @return 对应的页面信息
+	 */
+	ServerResponse searchProduct(String productName,Integer productId,int pageNum,int pageSize);
 
 	/**
 	 * 获取产品详情(前台--只能获取到在线的商品)

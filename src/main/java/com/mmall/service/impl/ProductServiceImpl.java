@@ -40,53 +40,38 @@ public class ProductServiceImpl implements IProductService {
 	@Autowired
 	private ICategoryService iCategoryService;
 
-	/**
-	 * 插入或者更新产品信息
-	 * --- 传了productId则更新，未传则插入
-	 * @param product 封装好的产品信息
-	 * @return 操作结果
-	 */
 	@Override
-	public ServerResponse<String> saveOrUpdateProduct(Product product){
-		if (product == null) {
-			return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
-		}
-		// 主图为子图的第一张图片
-		// 数据有一定冗余，但操作更方便
-		if(StringUtils.isNotBlank(product.getSubImages())){
-			String[] subImageArray = product.getSubImages().split(",");
-			if(subImageArray.length > 0){
-				product.setMainImage(subImageArray[0]);
+	public ServerResponse saveOrUpdateProduct(Product product){
+		if(product != null)
+		{
+			if(StringUtils.isNotBlank(product.getSubImages())){
+				String[] subImageArray = product.getSubImages().split(",");
+				if(subImageArray.length > 0){
+					product.setMainImage(subImageArray[0]);
+				}
 			}
-		}
 
-		// 根据是否传了ID来决定是更新还是插入
-		if(product.getId() != null){
-			int rowCount = productMapper.updateByPrimaryKey(product);
-			if(rowCount > 0){
-				return ServerResponse.createBySuccess("更新产品成功");
+			if(product.getId() != null){
+				int rowCount = productMapper.updateByPrimaryKey(product);
+				if(rowCount > 0){
+					return ServerResponse.createBySuccess("更新产品成功");
+				}
+				return ServerResponse.createBySuccess("更新产品失败");
+			}else{
+				int rowCount = productMapper.insert(product);
+				if(rowCount > 0){
+					return ServerResponse.createBySuccess("新增产品成功");
+				}
+				return ServerResponse.createBySuccess("新增产品失败");
 			}
-			return ServerResponse.createBySuccess("更新产品失败");
-		}else{
-			int rowCount = productMapper.insert(product);
-			if(rowCount > 0){
-				return ServerResponse.createBySuccess("新增产品成功");
-			}
-			return ServerResponse.createBySuccess("新增产品失败");
 		}
+		return ServerResponse.createByErrorMessage("新增或更新产品参数不正确");
 	}
 
 
-	/**
-	 * 修改产品销售状态
-	 * @param productId 产品ID
-	 * @param status 销售状态 1-在售 2-下架 3-删除
-	 * @return 修改结果
-	 */
 	@Override
 	public ServerResponse<String> setSaleStatus(Integer productId, Integer status){
-		// status 只有1，2，3三种状态
-		if(productId == null || status == null || status < 1 || status > 3){
+		if(productId == null || status == null){
 			return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
 		}
 		Product product = new Product();
@@ -100,11 +85,6 @@ public class ProductServiceImpl implements IProductService {
 	}
 
 
-	/**
-	 * 获取产品详情（后台--能获取到所有数据库中存在的商品详情）
-	 * @param productId 产品ID
-	 * @return 产品详情（ProductDetailVo对象）
-	 */
 	@Override
 	public ServerResponse<ProductDetailVo> manageProductDetail(Integer productId){
 		if(productId == null){
@@ -118,11 +98,6 @@ public class ProductServiceImpl implements IProductService {
 		return ServerResponse.createBySuccess(productDetailVo);
 	}
 
-	/**
-	 * 将product对象封装为ProductDetailVo对象
-	 * @param product 封装好的产品信息
-	 * @return  更详尽的ProductDetailVo对象
-	 */
 	private ProductDetailVo assembleProductDetailVo(Product product){
 		ProductDetailVo productDetailVo = new ProductDetailVo();
 		productDetailVo.setId(product.getId());
@@ -140,8 +115,7 @@ public class ProductServiceImpl implements IProductService {
 
 		Category category = categoryMapper.selectByPrimaryKey(product.getCategoryId());
 		if(category == null){
-			//默认为根节点
-			productDetailVo.setParentCategoryId(0);
+			productDetailVo.setParentCategoryId(0);//默认根节点
 		}else{
 			productDetailVo.setParentCategoryId(category.getParentId());
 		}
@@ -152,32 +126,25 @@ public class ProductServiceImpl implements IProductService {
 	}
 
 
-	/**
-	 * 获取页面信息
-	 * @param pageNum 页号（从1开始）
-	 * @param pageSize 每页个数
-	 * @return 封装好的对应页信息（pageInfo）
-	 */
+
 	@Override
-	public ServerResponse<PageInfo<ProductListVo>> getProductList(int pageNum, int pageSize){
+	public ServerResponse getProductList(int pageNum, int pageSize){
 		//startPage--start
-		PageHelper.startPage(pageNum,pageSize);
-
 		//填充自己的sql查询逻辑
-		List<Product> productList = productMapper.selectList();
-		List<ProductListVo> productListVoList = Lists.newArrayList();
-		productList.forEach(product -> productListVoList.add(assembleProductListVo(product)));
-
 		//pageHelper-收尾
-		PageInfo<ProductListVo> pageResult = new PageInfo<ProductListVo>(productListVoList);
+		PageHelper.startPage(pageNum,pageSize);
+		List<Product> productList = productMapper.selectList();
+
+		List<ProductListVo> productListVoList = Lists.newArrayList();
+		for(Product productItem : productList){
+			ProductListVo productListVo = assembleProductListVo(productItem);
+			productListVoList.add(productListVo);
+		}
+		PageInfo pageResult = new PageInfo(productList);
+		pageResult.setList(productListVoList);
 		return ServerResponse.createBySuccess(pageResult);
 	}
 
-	/**
-	 * 将product对象封装为ProductListVo对象
-	 * @param product 封装好的产品信息
-	 * @return  更合适的ProductListVo对象
-	 */
 	private ProductListVo assembleProductListVo(Product product){
 		ProductListVo productListVo = new ProductListVo();
 		productListVo.setId(product.getId());
@@ -192,20 +159,12 @@ public class ProductServiceImpl implements IProductService {
 	}
 
 
-	/**
-	 * 依据产品名称（productName）或产品ID（productId）来对产品分页
-	 * 	 * 二者只可选其一，都传入category优先
-	 * @param productName 产品名称 模糊查询
-	 * @param productId 产品ID
-	 * @param pageNum 页号
-	 * @param pageSize 页面大小
-	 * @return 对应的页面信息
-	 */
+
 	@Override
-	public ServerResponse<PageInfo<ProductListVo>> searchProduct(String productName, Integer productId, int pageNum, int pageSize){
+	public ServerResponse<PageInfo> searchProduct(String productName, Integer productId, int pageNum, int pageSize){
 		PageHelper.startPage(pageNum,pageSize);
 		if(StringUtils.isNotBlank(productName)){
-			productName = "%" + productName + "%";
+			productName = new StringBuilder().append("%").append(productName).append("%").toString();
 		}
 		List<Product> productList = productMapper.selectByNameAndProductId(productName,productId);
 		List<ProductListVo> productListVoList = Lists.newArrayList();
@@ -219,11 +178,6 @@ public class ProductServiceImpl implements IProductService {
 	}
 
 
-	/**
-	 * 获取产品详情(前台--只能获取到在线的商品)
-	 * @param productId 产品ID
-	 * @return 产品详情（ProductDetailVo对象）
-	 */
 	@Override
 	public ServerResponse<ProductDetailVo> getProductDetail(Integer productId){
 		if(productId == null){
@@ -241,16 +195,6 @@ public class ProductServiceImpl implements IProductService {
 	}
 
 
-	/**
-	 * 依据关键词（keyword）或商品分类（category）来对产品分页
-	 * 二者只可选其一，都传入category优先
-	 * @param keyword 关键词，模糊查询
-	 * @param categoryId 分类ID
-	 * @param pageNum 页号
-	 * @param pageSize 页面大小
-	 * @param orderBy 排序规则，目前支持"price_desc","price_asc"
-	 * @return 对应的页面信息
-	 */
 	@Override
 	public ServerResponse<PageInfo> getProductByKeywordCategory(String keyword, Integer categoryId, int pageNum, int pageSize, String orderBy){
 		if(StringUtils.isBlank(keyword) && categoryId == null){
@@ -267,11 +211,10 @@ public class ProductServiceImpl implements IProductService {
 				PageInfo pageInfo = new PageInfo(productListVoList);
 				return ServerResponse.createBySuccess(pageInfo);
 			}
-			// 递归获取该分类下的所有子分类
 			categoryIdList = iCategoryService.selectCategoryAndChildrenById(category.getId()).getData();
 		}
 		if(StringUtils.isNotBlank(keyword)){
-			keyword = "%" + keyword + "%";
+			keyword = new StringBuilder().append("%").append(keyword).append("%").toString();
 		}
 
 		PageHelper.startPage(pageNum,pageSize);
